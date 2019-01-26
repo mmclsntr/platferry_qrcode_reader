@@ -8,19 +8,20 @@ var app = new Vue({
         cameras: [],
         scans: [],
         roomId: 0,
-        newContent: "",
+        newUserId: "",
     },
     mounted: function () {
         var self = this;
         // Query param
-        if (r_id = self.getQueryParam("room_id")) {
+        var r_id = self.getQueryParam("room_id")
+        if (r_id) {
             self.roomId = r_id
         }
 
         // Scanner Initialize
         self.scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5 });
         self.scanner.addListener('scan', function (content, image) {
-            self.newContent = content
+            self.newUserId = content
             self.scans.unshift({ date: +(Date.now()), content: content });
         });
         Instascan.Camera.getCameras().then(function (cameras) {
@@ -51,11 +52,18 @@ var app = new Vue({
             if (!results) return null;
             if (!results[2]) return '';
             return decodeURIComponent(results[2].replace(/\+/g, " "));
-        }
+        },
     },
     watch: {
-        "newContent": function(newValue, oldValue) {
+        "newUserId": function(newValue, oldValue) {
             console.log(newValue)
+            axios.get(ROOM_API_URI + "/room/" + this.roomId + "/auth/" + this.newUserId)
+                .then(function (response) {
+                    console.log(response);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                })
         }
     }
 });
